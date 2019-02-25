@@ -7,7 +7,28 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(pacman)
-p_load(twitteR, ROAuth)
+p_load(rtweet, ROAuth, httpuv)
 p_load(tidyverse, ggunchained)
+```
+
+# authenticate
+```{r}
+token <- create_token(
+  app = "supplyandcommand_scraper",
+  consumer_key = "8A5ZysX5pMBRGlRZH0fiZuCSk",
+  consumer_secret = "L2q1HLQMyxThIOoXb5lWYu1Vt5iORSAqRw44A5gWReF2GDH3je")
+
+token <- create_token(
+  app = "supplyandcommand_scraper",
+  consumer_key = "8A5ZysX5pMBRGlRZH0fiZuCSk",
+  consumer_secret = "L2q1HLQMyxThIOoXb5lWYu1Vt5iORSAqRw44A5gWReF2GDH3je",
+  access_token = "1100100223098064896-uT0xZLoHwrJ1gE4ZAPV36k6mjaZOqp",
+  access_secret = "VnKWvTOtQtPw7kqiVR2nWcM3PP57pMnPMHnIbiI9QcfmY")
+```
+
+# searching for tweets
+```{r}
+rt <- search_tweets(
+  "#NoDeal", n = 18000)
 ```
 
