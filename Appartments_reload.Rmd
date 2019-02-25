@@ -1,0 +1,14 @@
+---
+title: "Appartments_reload"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(pacman)
+p_load(tidyverse, rvest, devtools)
+
+raw <- read_csv("scraped_en.csv")
+```
+

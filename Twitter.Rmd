@@ -1,0 +1,13 @@
+---
+title: "Twitter"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(pacman)
+p_load(twitteR, ROAuth)
+p_load(tidyverse, ggunchained)
+```
+
