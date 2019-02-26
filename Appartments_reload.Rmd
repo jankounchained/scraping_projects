@@ -7,8 +7,15 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(pacman)
-p_load(tidyverse, rvest, devtools)
+p_load(tidyverse, rvest, devtools, RSelenium)
 
-raw <- read_csv("scraped_en.csv")
+#raw <- read_csv("scraped_en.csv")
+```
+
+
+Apartment scraping 2.0
+
+```{r}
+
 ```
 
