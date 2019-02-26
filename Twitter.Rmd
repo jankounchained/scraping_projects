@@ -28,7 +28,7 @@ token <- create_token(
 
 # searching for tweets
 ```{r}
-rt <- search_tweets(
-  "#NoDeal", n = 18000)
+rt_low <- search_tweets(
+  "#nodeal", n = 50000, retryonratelimit = T)
 ```
 
