@@ -1,0 +1,36 @@
+---
+title: "TwitterEDA"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(pacman)
+p_load(rtweet, ROAuth, httpuv)
+p_load(tidyverse, ggunchained)
+```
+
+# load data
+```{r}
+s1 <- readRDS("rt2.Rda")
+s2 <- readRDS("190226_nodeal.Rda")
+s3 <- readRDS("190226_nodeal_lwr.Rda")
+
+table(str_detect(s3$hashtags, "50swomen"))
+```
+
+# some metrics
+## nchar
+
+
+# hashtags
+## #leavemeansleave
+
+## #brexitbetrayal
+
+## #PMQs
+
+## #50swomen
+
+## #OneVoice
