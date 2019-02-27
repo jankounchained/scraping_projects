@@ -15,7 +15,80 @@ p_load(tidyverse, rvest, devtools, RSelenium)
 
 Apartment scraping 2.0
 
+# list of links
 ```{r}
+# load complete html doc of the site
+html_link <- read_html("190227_lejebolig.htm")
 
+# get all links
+link_list <- html_link %>%
+  html_nodes("a") %>%
+  html_attr("href")
+
+link_list_chr <- unlist(link_list)
+
+### cleaning list of url links
+link_list_df <- as.data.frame(link_list_chr) %>%
+  filter(!str_detect(link_list_chr, "google") &
+         !str_detect(link_list_chr, "Hunter") &
+         !str_detect(link_list_chr, "min-konto") &
+         !str_detect(link_list_chr, "Scripts") &
+         !str_detect(link_list_chr, "scripts") &
+         !str_detect(link_list_chr, "Content") &
+         !str_detect(link_list_chr, "content") &
+         !str_detect(link_list_chr, "facebook") &
+         !str_detect(link_list_chr, "artikler") &
+         !str_detect(link_list_chr, "/lejebolig/aarhus")
+)
+
+View(link_list_df)
+
+clean_link_list <- as.character(link_list_df[17:2234,1])
+```
+
+# scraping loop
+```{r}
+lst_loop <- lapply(clean_link_list, FUN=function(URLLink){
+  PlayerScrape <- read_html(URLLink)
+  res.txt <- PlayerScrape %>%
+    html_nodes(".col-xs-4") %>%
+    html_text()
+  
+  res.df <- as.data.frame(res.txt)
+  res.df <- t(res.df)
+  
+  res.df <- res.df %>%
+    str_replace_all(pattern = "\n", replacement = " ") %>%
+    str_replace_all(pattern = "\r", replacement = " ") %>%
+    str_replace_all(pattern = "\t", replacement = " ") %>%
+    str_trim(side = "both")
+  
+  res.df <- as.data.frame(t(res.df))
+})
+
+#df_loop <- do.call(rbind, lst_loop)
+
+### gathering loop for street name and description
+lst_loop3 <- lapply(clean_link_list, FUN=function(URLLink){
+  PlayerScrape <- read_html(URLLink)
+  
+  res.txt <- PlayerScrape %>%
+    html_nodes("p") %>%
+    html_text()
+  
+  res.df <- as.data.frame(res.txt)
+  
+  res.df <- t(res.df)
+  
+  res.df <- res.df %>%
+    str_replace_all(pattern = "\n", replacement = " ") %>%
+    str_replace_all(pattern = "\r", replacement = " ") %>%
+    str_replace_all(pattern = "\t", replacement = " ") %>%
+    str_trim(side = "both")
+  
+  res.df <- as.data.frame(t(res.df))
+})
+
+df_loop3 <- do.call(bind_rows, lst_loop3)
 ```
 
