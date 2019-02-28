@@ -7,48 +7,13 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(pacman)
-p_load(rtweet, ROAuth, httpuv)
+#p_load(rtweet, ROAuth, httpuv)
 p_load(tidyverse, ggunchained, tidytext)
 ```
 
 # load data
 ```{r}
-s1 <- readRDS("rt2.Rda")
-s2 <- readRDS("190226_nodeal.Rda")
-s3 <- readRDS("190226_nodeal_lwr.Rda")
-s4 <- readRDS("190227_ND.Rda")
-s5 <- readRDS("190227_ND2.Rda")
-s6 <- readRDS("190227_NDbog.Rda")
-```
-
-## making all list variables characters
-```{r}
-s1.1 <- s1 %>%
-  mutate_if(is.list, as.character)
-
-s2.1 <- s2 %>%
-  mutate_if(is.list, as.character)
-
-s3.1 <- s3 %>%
-  mutate_if(is.list, as.character)
-
-s4.1 <- s4 %>%
-  mutate_if(is.list, as.character)
-
-s5.1 <- s5 %>%
-  mutate_if(is.list, as.character)
-
-s6.1 <- s6 %>%
-  mutate_if(is.list, as.character)
-
-tw_raw <- s1.1 %>%
-  full_join(s2.1) %>%
-  full_join(s3.1) %>%
-  full_join(s4.1) %>%
-  full_join(s5.1) %>%
-  full_join(s6.1)
-
-rm(list=ls(pattern="s[1-9]"))
+tw_raw <- read_csv("tw_raw.csv")
 ```
 
 
