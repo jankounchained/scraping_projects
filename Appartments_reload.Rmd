@@ -49,8 +49,10 @@ clean_link_list_unique <- unique(clean_link_list)
 
 # scraping loop
 ```{r}
-scraper <- function(link, timeout = sample(5, 1) + rnorm(1)){
+scraper <- function(link){
 
+  timeout = sample(5, 1) + exp(rnorm(1))
+  
   scrape <- read_html(link)
   
   Sys.sleep(timeout)
