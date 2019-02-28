@@ -31,7 +31,7 @@ tw_time %>%
   ggplot(aes(x = sssss/60/60)) +
   geom_histogram(aes(fill = ..count..)) +
   scale_x_continuous(breaks = seq(0, 23, 1)) +
-  labs(title = "When are tweets posted?",
+  labs(title = "Time of tweeting",
        subtitle = "#NoDeal, form 2019-02-15 to 2019-02-27",
        x = "Hour (UTC)", 
        y = "Number of tweets") +
