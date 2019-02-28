@@ -8,7 +8,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(pacman)
 #p_load(rtweet, ROAuth, httpuv)
-p_load(tidyverse, ggunchained, tidytext)
+p_load(tidyverse, ggunchained, tidytext, lubridate, wesanderson)
 ```
 
 # load data
@@ -17,8 +17,30 @@ tw_raw <- read_csv("tw_raw.csv")
 ```
 
 
-# some metrics
-## nchar
+# general metrics
+## time of the day
+```{r}
+tw_time <- tw_raw %>%
+  mutate(std_created_at = ymd_hms(created_at),
+         std_created_at = with_tz(std_created_at, tzone = "UTC"),
+         hhmm = paste(hour(std_created_at),minute(std_created_at), sep=":"),
+         sssss = as.numeric(std_created_at - trunc(std_created_at, "days"))
+         )
+
+tw_time %>%
+  ggplot(aes(x = sssss/60/60)) +
+  geom_histogram(aes(fill = ..count..)) +
+  scale_x_continuous(breaks = seq(0, 23, 1)) +
+  labs(title = "When are tweets posted?",
+       subtitle = "#NoDeal, form 2019-02-15 to 2019-02-27",
+       x = "Hour (UTC)", 
+       y = "Number of tweets") +
+  theme_janco_point() +
+  theme(legend.position = "none") +
+  scale_fill_gradient(low = paste0(wes_palette("Zissou1")[1]), 
+                      high = paste0(wes_palette("Zissou1")[5]))
+```
+
 
 
 # hashtags
@@ -29,6 +51,11 @@ h_lml <- tw_raw %>%
          leavemeansleave = str_detect(hashtags, "leavemeansleave"),
          brexitbetrayal = str_detect(hashtags, "brexitbetrayal"))
 ```
+
+```{r}
+
+```
+
 
 
 ## most used hashtags
@@ -47,3 +74,17 @@ most_used <- tw_raw %>%
 ## #50swomen
 
 ## #OneVoice
+
+
+# SENTIMENT
+```{r}
+alltweets$clean_text <- str_replace_all(alltweets$text, "@\\w+", "")
+Sentiment <- get_nrc_sentiment(alltweets$clean_text)
+alltweets_senti <- cbind(alltweets, Sentiment)
+
+sentimentTotals <- data.frame(colSums(alltweets_senti[,c(19:26)]))
+names(sentimentTotals) <- "count"
+sentimentTotals <- cbind("sentiment" = rownames(sentimentTotals), sentimentTotals)
+rownames(sentimentTotals) <- NULL
+```
+
