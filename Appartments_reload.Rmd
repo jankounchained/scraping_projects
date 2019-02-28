@@ -44,51 +44,133 @@ link_list_df <- as.data.frame(link_list_chr) %>%
 View(link_list_df)
 
 clean_link_list <- as.character(link_list_df[17:2234,1])
+clean_link_list_unique <- unique(clean_link_list)
 ```
 
 # scraping loop
 ```{r}
-lst_loop <- lapply(clean_link_list, FUN=function(URLLink){
-  PlayerScrape <- read_html(URLLink)
-  res.txt <- PlayerScrape %>%
+scraper <- function(link, timeout = sample(5, 1) + rnorm(1)){
+
+  scrape <- read_html(link)
+  
+  Sys.sleep(timeout)
+  
+  # SUMMARY TILES SCRAPE
+  basic_data <- scrape %>%
     html_nodes(".col-xs-4") %>%
     html_text()
   
-  res.df <- as.data.frame(res.txt)
-  res.df <- t(res.df)
+  basic_data.df <- as.data.frame(basic_data)
+  basic_data.df <- t(basic_data.df)
   
-  res.df <- res.df %>%
+  basic_data.df <- basic_data.df %>%
     str_replace_all(pattern = "\n", replacement = " ") %>%
     str_replace_all(pattern = "\r", replacement = " ") %>%
     str_replace_all(pattern = "\t", replacement = " ") %>%
     str_trim(side = "both")
   
-  res.df <- as.data.frame(t(res.df))
-})
-
-#df_loop <- do.call(rbind, lst_loop)
-
-### gathering loop for street name and description
-lst_loop3 <- lapply(clean_link_list, FUN=function(URLLink){
-  PlayerScrape <- read_html(URLLink)
+  basic_data.df <- as.data.frame(t(basic_data.df))
   
-  res.txt <- PlayerScrape %>%
-    html_nodes("p") %>%
+  Sys.sleep(timeout)
+  
+  
+  # WHOLE TEXT SCRAPE
+  all_text <- scrape %>%
+    html_nodes(".lease-text") %>%
     html_text()
   
-  res.df <- as.data.frame(res.txt)
+  all_text.df <- as.data.frame(all_text[1])
   
-  res.df <- t(res.df)
+  all_text.df <- t(all_text.df)
   
-  res.df <- res.df %>%
+  all_text.df <- all_text.df %>%
     str_replace_all(pattern = "\n", replacement = " ") %>%
     str_replace_all(pattern = "\r", replacement = " ") %>%
     str_replace_all(pattern = "\t", replacement = " ") %>%
     str_trim(side = "both")
   
-  res.df <- as.data.frame(t(res.df))
-})
+  
+  # JOIN DATA
+  combo <- cbind.data.frame(basic_data.df, all_text.df)
+  return(combo)
+}
+```
 
-df_loop3 <- do.call(bind_rows, lst_loop3)
+# running the scrape
+```{r}
+raw <- map_df(clean_link_list_unique, scraper)
+```
+
+# cleaning the scrape
+```{r}
+var_extract <- function(vector) {
+  
+  df_clean <- tibble(var = as.character(vector))  %>%
+    separate(var, 
+             into = c("type", "street", "loc", "rest"), 
+             sep = ",") %>%
+    mutate(type = str_trim(type, side = "both"),
+           street = str_trim(street, side = "both"),
+           loc = str_trim(loc, side = "both")) %>%
+    separate(loc, into = c("post_nr", "loc"), sep = " ") %>%
+    mutate(etage = as.character(str_extract_all(rest, "etage: ......")),
+           etage = tolower(etage),
+           etage = case_when(str_detect(etage, "stuen|st") ~ "ground",
+                             TRUE ~ str_extract(etage, "[1-9]")),
+           # rooms
+           rooms = as.character(str_extract_all(rest, "Antal værelser: [1-9]")),
+           rooms = str_extract(rooms, "[1-9]"),
+           # m2
+           sqm = as.character(str_extract_all(rest, "Antal m2: [1-9]*")),
+           sqm = str_remove(sqm, "Antal m2: "),
+           # rent
+           rent = str_extract(rest, "Husleje..........."),
+           rent = str_remove_all(rent, "\\."),
+           rent = str_extract_all(rent, "[0-9]"),
+           rent = paste(unlist(rent), collapse = ''),
+           # indskud
+           indskud = str_extract(rest, "Indskud:.........."),
+           indskud = str_remove_all(indskud, "\\."),
+           indskud = str_extract_all(indskud, "[0-9]"),
+           indskud = paste(unlist(indskud), collapse = ''),
+           # deposit
+           deposit = str_extract(rest, "Depositum:.........."),
+           deposit = str_remove_all(deposit, "\\."),
+           deposit = str_extract_all(deposit, "[0-9]"),
+           deposit = paste(unlist(deposit), collapse = ''),
+           # advance_rent
+           advance_rent = str_extract(rest, "Forudbetalt leje:.........."),
+           advance_rent = str_remove_all(advance_rent, "\\."),
+           advance_rent = str_extract_all(advance_rent, "[0-9]"),
+           advance_rent = paste(unlist(advance_rent), collapse = ''),
+           # ac_usage
+           ac_usage = str_extract(rest, "A/C-forbrug:....."),
+           ac_usage = str_remove_all(ac_usage, "\\."),
+           ac_usage = str_extract_all(ac_usage, "[0-9]"),
+           ac_usage = paste(unlist(ac_usage), collapse = ''),
+           # avaiable 18 char
+           avaiable = str_extract(rest, "Ledig:.................."),
+           avaiable = str_remove(avaiable, "Ledig: "),
+           avaiable = str_trim(avaiable, side = "both"),
+           # published 18 char
+           published = str_extract(rest, "Indrykket:.................."),
+           published = str_remove(published, "Indrykket: "),
+           published = str_trim(published, side = "both"),
+           # balcony
+           balcony = str_detect(rest, "Altan/terasse"),
+           # lift
+           lift = str_detect(rest, "Elevator"),
+           # ID
+           ID = str_extract(rest, "Sagsnummer:........"),
+           ID = str_remove(ID, "Sagsnummer: "),
+           ID = str_trim(ID, side = "both"),
+           # REST
+           rest = str_trim(rest, side = "both"),
+           rest = str_replace_all(rest, "  ", " ")
+    )
+  
+  return(df_clean)
+  
+}
 ```
 
