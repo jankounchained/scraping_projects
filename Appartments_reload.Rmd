@@ -105,10 +105,22 @@ raw <- map_df(clean_link_list_unique, scraper)
 
 # cleaning the scrape
 ```{r}
-var_extract <- function(vector) {
+var_extract <- function(data) {
   
-  df_clean <- tibble(var = as.character(vector))  %>%
-    separate(var, 
+  df_clean <- data  %>%
+    # BAISC DATA
+    mutate(rent_b = str_remove_all(V1, "\\."),
+           rent_b = str_remove(rent_b, " kr/md"),
+           rent_b = str_extract(rent_b, "(\\d)+"),
+           length = V2,
+           type_b = V3,
+           loc_b = V4,
+           sqm_b = str_extract(V5, "(\\d)+"),
+           rooms_b = str_extract(V6, "(\\d)+")
+           ) %>%
+    select(-(V1:V6)) %>%
+    # ALL DATA
+    separate(all_text.df, 
              into = c("type", "street", "loc", "rest"), 
              sep = ",") %>%
     mutate(type = str_trim(type, side = "both"),
@@ -128,28 +140,23 @@ var_extract <- function(vector) {
            # rent
            rent = str_extract(rest, "Husleje..........."),
            rent = str_remove_all(rent, "\\."),
-           rent = str_extract_all(rent, "[0-9]"),
-           rent = paste(unlist(rent), collapse = ''),
+           rent = str_extract(rent, "(\\d)+"),
            # indskud
            indskud = str_extract(rest, "Indskud:.........."),
            indskud = str_remove_all(indskud, "\\."),
-           indskud = str_extract_all(indskud, "[0-9]"),
-           indskud = paste(unlist(indskud), collapse = ''),
+           indskud = str_extract(indskud, "(\\d)+"),
            # deposit
            deposit = str_extract(rest, "Depositum:.........."),
            deposit = str_remove_all(deposit, "\\."),
-           deposit = str_extract_all(deposit, "[0-9]"),
-           deposit = paste(unlist(deposit), collapse = ''),
+           deposit = str_extract(deposit, "(\\d)+"),
            # advance_rent
            advance_rent = str_extract(rest, "Forudbetalt leje:.........."),
            advance_rent = str_remove_all(advance_rent, "\\."),
-           advance_rent = str_extract_all(advance_rent, "[0-9]"),
-           advance_rent = paste(unlist(advance_rent), collapse = ''),
+           advance_rent = str_extract(advance_rent, "(\\d)+"),
            # ac_usage
            ac_usage = str_extract(rest, "A/C-forbrug:....."),
            ac_usage = str_remove_all(ac_usage, "\\."),
-           ac_usage = str_extract_all(ac_usage, "[0-9]"),
-           ac_usage = paste(unlist(ac_usage), collapse = ''),
+           ac_usage = str_extract(ac_usage, "(\\d)+"),
            # avaiable 18 char
            avaiable = str_extract(rest, "Ledig:.................."),
            avaiable = str_remove(avaiable, "Ledig: "),
@@ -169,9 +176,37 @@ var_extract <- function(vector) {
            # REST
            rest = str_trim(rest, side = "both"),
            rest = str_replace_all(rest, "  ", " ")
-    )
-  
+    ) %>%
+    select(rest, 
+           # comparing the two scrapes
+           rent_b, rent, sqm_b, sqm, rooms_b, rooms, type_b, type, loc_b, loc, 
+           # primary extracted variables
+           street, post_nr, etage, length, indskud, deposit, advance_rent,
+           # secondary extracted varialbes
+           ac_usage, avaiable, published, balcony, lift, ID)
+    
   return(df_clean)
+  
+}
+```
+
+# run cleaning
+```{r}
+cl <- var_extract(raw)
+glimpse(cl)
+```
+
+# validate clenliness
+```{r}
+colSums(is.na(cl))
+
+a <- cl %>%
+  mutate(street = ifelse(str_detect(street, "Antal værelser"), NA, street))
+
+validate_cleaning <- function(clean_data) {
+  
+  t2 <- clean_data %>%
+    mutate(rent = case_when())
   
 }
 ```
