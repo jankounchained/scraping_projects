@@ -9,7 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(pacman)
 p_load(tidyverse, rvest, devtools, RSelenium)
 
-#raw <- read_csv("scraped_en.csv")
+raw <- read_csv("raw.csv")
 ```
 
 
@@ -129,7 +129,7 @@ var_extract <- function(data) {
     separate(loc, into = c("post_nr", "loc"), sep = " ") %>%
     mutate(etage = as.character(str_extract_all(rest, "etage: ......")),
            etage = tolower(etage),
-           etage = case_when(str_detect(etage, "stuen|st") ~ "ground",
+           etage = case_when(str_detect(etage, "stuen|st") ~ "0",
                              TRUE ~ str_extract(etage, "[1-9]")),
            # rooms
            rooms = as.character(str_extract_all(rest, "Antal værelser: [1-9]")),
@@ -198,16 +198,19 @@ glimpse(cl)
 
 # validate clenliness
 ```{r}
-colSums(is.na(cl))
+cl2 <- cl %>%
+  mutate(street = ifelse(str_detect(street, "Antal værelser"), NA, street),
+         street = ifelse(str_detect(street, loc_b), NA, street)) %>%
+  select(-rent, -sqm, -rooms, -type, -loc) %>%
+  # description in lower case
+  mutate(rest = tolower(rest)) %>%
+  # str detection in description
+  mutate(hyg = ifelse(str_detect(rest, "hygge"), 1, 0),
+         dej = ifelse(str_detect(rest, "dejligt"), 1, 0),
+         social = ifelse(str_detect(rest, "soc"), 1, 0),
+         desc = ifelse(is.na(rest), 0, 1)
+         )
 
-a <- cl %>%
-  mutate(street = ifelse(str_detect(street, "Antal værelser"), NA, street))
 
-validate_cleaning <- function(clean_data) {
-  
-  t2 <- clean_data %>%
-    mutate(rent = case_when())
-  
-}
 ```
 
